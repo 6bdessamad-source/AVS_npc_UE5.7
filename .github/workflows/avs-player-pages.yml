@@ -2,7 +2,7 @@ name: Publish AVS Player
 on:
   push:
     branches: [main]
-    paths: ['avs-player/**', '.github/workflows/avs-player-pages.yml']
+    paths: ['avs-player/**', 'index.html', '404.html', 'player.html', '.nojekyll', '.github/workflows/avs-player-pages.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p _site/avs-player
           cp -R avs-player/. _site/avs-player/
-          printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=avs-player/"><title>AVS Live Studio</title><a href="avs-player/">Open AVS Player</a>\n' > _site/index.html
+          cp index.html 404.html player.html _site/
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
