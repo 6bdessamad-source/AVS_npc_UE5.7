@@ -6,8 +6,8 @@
   <meta name="description" content="Connect to your AVS Unreal Engine experience running on your gaming rig.">
   <meta name="referrer" content="no-referrer">
   <title>AVS / Live Studio</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=3">
+  <script src="app.js?v=3" defer></script>
 </head>
 <body>
   <header><a class="brand" href="./"><span class="mark">A</span> AVS <span class="brand-note">LIVE STUDIO</span></a><span class="version">UNREAL ENGINE 5.7</span></header>
@@ -27,7 +27,7 @@
         <div class="divider"></div>
         <div class="eyebrow">02 / IN THE EXPERIENCE</div>
         <ul class="controls"><li><span>Move</span><kbd>W A S D</kbd></li><li><span>Look / interact</span><span>Mouse</span></li><li><span>Release cursor</span><kbd>Esc</kbd></li><li><span>Sound</span><span>Click to play</span></li></ul>
-        <p class="hint">Controls depend on your Unreal project. Use the player's own toolbar for video and input settings.</p>
+        <p class="hint">Keyboard, mouse, touch, and gamepad input are enabled. On a touchscreen, use the player's MOVE and LOOK pads. Connect a gamepad and press a button to activate it. Actions follow your Unreal project's bindings.</p>
         <details><summary>Connection help</summary><p>On the same network, paste <code>http://RIG-IP:8080</code>. The local player opens in its own tab because this page uses HTTPS.</p><p>For internet access, use the manager's HTTPS link. If the player shows no streamer, check the packaged game's Pixel Streaming plugin. If a streamer appears but video fails, check your TURN relay and firewall.</p><p>The rig must stay awake with the game running. This page cannot wake or start your PC.</p></details>
       </aside>
       <section class="viewer" aria-label="Unreal experience">
