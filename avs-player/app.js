@@ -21,6 +21,9 @@ function playerUrl(value) {
   url.searchParams.delete('ss');
   url.searchParams.set('AutoConnect', 'true');
   url.searchParams.set('AutoPlayVideo', 'true');
+  for (const setting of ['KeyboardInput', 'MouseInput', 'TouchInput', 'GamepadInput', 'FakeMouseWithTouches']) {
+    url.searchParams.set(setting, 'true');
+  }
   url.hash = '';
   return url;
 }
