@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Connect to your AVS Unreal Engine experience running on your gaming rig.">
+  <meta name="referrer" content="no-referrer">
+  <title>AVS / Live Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="./"><span class="mark">A</span> AVS <span class="brand-note">LIVE STUDIO</span></a><span class="version">UNREAL ENGINE 5.7</span></header>
+  <main>
+    <section class="intro"><div><div class="eyebrow">YOUR SPACE. IN REAL TIME.</div><h1>A window into<br>your Unreal world.</h1><p>Your rig does the rendering. Your laptop takes you there.</p></div><div class="session-chip"><span class="dot"></span><span id="status" role="status" aria-live="polite">Ready to connect</span></div></section>
+    <div class="workspace">
+      <aside>
+        <div class="eyebrow">01 / CONNECTION</div><h2>Connect to your rig</h2>
+        <form id="connect-form">
+          <label for="server">Player address</label>
+          <input id="server" name="server" type="url" placeholder="https://your-rig.example.com" autocomplete="off" required aria-describedby="address-help">
+          <p class="hint" id="address-help">Paste the HTTPS address from your AVS manager, or open the laptop link it creates.</p>
+          <button class="primary" type="submit">Open experience <span aria-hidden="true">↗</span></button>
+        </form>
+        <button id="disconnect" class="secondary" disabled>Disconnect</button>
+        <p id="message" class="message" role="status" aria-live="polite">Start streaming on the main rig first.</p>
+        <div class="divider"></div>
+        <div class="eyebrow">02 / IN THE EXPERIENCE</div>
+        <ul class="controls"><li><span>Move</span><kbd>W A S D</kbd></li><li><span>Look / interact</span><span>Mouse</span></li><li><span>Release cursor</span><kbd>Esc</kbd></li><li><span>Sound</span><span>Click to play</span></li></ul>
+        <p class="hint">Controls depend on your Unreal project. Use the player's own toolbar for video and input settings.</p>
+        <details><summary>Connection help</summary><p>On the same network, paste <code>http://RIG-IP:8080</code>. The local player opens in its own tab because this page uses HTTPS.</p><p>For internet access, use the manager's HTTPS link. If the player shows no streamer, check the packaged game's Pixel Streaming plugin. If a streamer appears but video fails, check your TURN relay and firewall.</p><p>The rig must stay awake with the game running. This page cannot wake or start your PC.</p></details>
+      </aside>
+      <section class="viewer" aria-label="Unreal experience">
+        <div class="viewer-bar"><span><span class="tiny-dot"></span> EXPERIENCE VIEW</span><div><a id="direct" class="tool" hidden target="_blank" rel="noopener noreferrer">Open in tab ↗</a><button id="fullscreen" class="tool" disabled>Fullscreen ⛶</button></div></div>
+        <div id="stage"><div id="placeholder"><div class="orbit"><div class="orbit-inner"><span>A</span></div></div><div class="eyebrow">AVS LIVE</div><h2>Your next view is waiting.</h2><p>Connect your rig to step inside.</p><span class="placeholder-note">LIVE RENDERING / FULL INTERACTION</span></div></div>
+        <div class="viewer-footer"><span>Powered by Epic Pixel Streaming</span><span>Rendered on your rig</span></div>
+      </section>
+    </div>
+  </main>
+  <footer><span>AVS / Architectural Visualization Studio</span><span>Build. Stream. Explore.</span></footer>
+</body>
+</html>

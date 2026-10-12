@@ -1,0 +1,6 @@
+AVS_BuildManager.config.json
+.runtime/
+StreamingLogs/
+AVS_PLAYER_LINKS.txt
+PixelStreamingInfrastructure-UE5.7/
+tools/
