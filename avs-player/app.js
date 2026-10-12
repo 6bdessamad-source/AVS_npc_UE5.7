@@ -1,100 +1,169 @@
 'use strict';
 const form = document.getElementById('connect-form');
 const input = document.getElementById('server');
+const connectButton = document.getElementById('connect-button');
 const stage = document.getElementById('stage');
+const viewer = document.getElementById('viewer');
 const placeholder = document.getElementById('placeholder');
 const status = document.getElementById('status');
+const session = document.getElementById('session-state');
 const message = document.getElementById('message');
 const disconnect = document.getElementById('disconnect');
 const fullscreen = document.getElementById('fullscreen');
 const direct = document.getElementById('direct');
 let frame = null;
 let slowTimer = null;
+let immersiveScroll = 0;
+let activeDialog = null;
+let dialogFocus = null;
 
+function setStatus(text, state = 'idle') { status.textContent = text; session.dataset.state = state; }
+function setMessage(text, error = false) { message.textContent = text; message.dataset.kind = error ? 'error' : 'info'; }
 function playerUrl(value) {
-  const url = new URL(value.trim());
+  if (!value.trim()) throw new Error('Paste the streaming link from your launcher first.');
+  let url;
+  try { url = new URL(value.trim()); } catch (_) { throw new Error('Use the complete link beginning with https:// or http://.'); }
+  // Accept the launcher’s complete laptop link as well as its raw rig address.
+  if ((url.origin === location.origin || url.hostname.endsWith('.github.io')) && url.searchParams.has('server')) {
+    try { url = new URL(url.searchParams.get('server')); } catch (_) { throw new Error('This shared link contains an invalid player address.'); }
+  }
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
-    throw new Error('Use an HTTP or HTTPS player address without a username or password.');
+    throw new Error('Use an HTTP or HTTPS streaming link without a username or password.');
   }
   if (!url.pathname.endsWith('.html')) url.pathname = url.pathname.replace(/\/$/, '') + '/player.html';
-  // The rig serves Epic's own player, which derives ws/wss from its origin.
   url.searchParams.delete('ss');
-  url.searchParams.set('AutoConnect', 'true');
-  url.searchParams.set('AutoPlayVideo', 'true');
-  for (const setting of ['KeyboardInput', 'MouseInput', 'TouchInput', 'GamepadInput', 'FakeMouseWithTouches']) {
+  for (const setting of ['AutoConnect', 'AutoPlayVideo', 'KeyboardInput', 'MouseInput', 'TouchInput', 'GamepadInput', 'FakeMouseWithTouches']) {
     url.searchParams.set(setting, 'true');
   }
   url.hash = '';
   return url;
 }
+function exitImmersive() {
+  if (document.body.classList.contains('immersive')) {
+    document.body.classList.remove('immersive');
+    window.scrollTo(0, immersiveScroll);
+  }
+  fullscreen.setAttribute('aria-label', 'Open fullscreen');
+  fullscreen.title = 'Fullscreen';
+  fullscreen.dataset.expanded = 'false';
+}
 function resetPlayer() {
   clearTimeout(slowTimer);
   if (frame) { frame.remove(); frame = null; }
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  exitImmersive();
   placeholder.hidden = false;
   disconnect.disabled = true;
   fullscreen.disabled = true;
   direct.hidden = true;
   document.body.classList.remove('player-open');
 }
-function connect() {
-  resetPlayer();
-  try {
-    const url = playerUrl(input.value);
-    try { localStorage.setItem('avs-player-server', input.value.trim()); } catch (_) {}
-    const shareUrl = new URL(location.href);
-    shareUrl.searchParams.set('server', input.value.trim());
-    try { history.replaceState(null, '', shareUrl); } catch (_) {}
-    direct.href = url.href;
-    direct.hidden = false;
-    if (location.protocol === 'https:' && url.protocol === 'http:') {
-      status.textContent = 'Local player available';
-      message.textContent = 'This is a local HTTP address. Click “Open in tab” above the viewer to play on your LAN or VPN.';
-      // A deliberate click on the direct link avoids popup blockers and browser
-      // mixed-content restrictions. Do not embed an HTTP iframe in HTTPS.
-      return;
-    }
-    status.textContent = 'Opening player…';
-    message.textContent = 'Loading the rig’s player. Allow playback when prompted.';
-    frame = document.createElement('iframe');
-    frame.title = 'AVS Unreal Engine player';
-    frame.allow = 'autoplay; fullscreen; gamepad; clipboard-write';
-    frame.allowFullscreen = true;
-    frame.referrerPolicy = 'no-referrer';
-    const activeFrame = frame;
-    frame.addEventListener('load', () => {
-      if (frame !== activeFrame) return;
-      clearTimeout(slowTimer);
-      status.textContent = 'Player opened';
-      message.textContent = 'Use the player to connect and start video. If it is blank or asks you to sign in, choose “Open in tab”.';
-      // An iframe load is NOT evidence of a live WebRTC stream. The official
-      // cross-origin player reports actual stream status inside its own UI.
-    });
-    frame.src = url.href;
-    placeholder.hidden = true;
-    stage.appendChild(frame);
-    disconnect.disabled = false;
-    fullscreen.disabled = false;
-    document.body.classList.add('player-open');
-    slowTimer = setTimeout(() => {
-      message.textContent = 'Still waiting for the player. Check that the rig and tunnel are running, or choose “Open in tab”.';
-    }, 15000);
-  } catch (error) {
-    status.textContent = 'Check the address';
-    message.textContent = error.message || 'Enter a valid player address.';
+function connect(userGesture = false) {
+  let url;
+  try { url = playerUrl(input.value); } catch (error) {
+    input.setAttribute('aria-invalid', 'true');
+    setStatus('Check your link', 'error');
+    setMessage(error.message, true);
+    input.focus();
+    return;
   }
-}
-form.addEventListener('submit', event => { event.preventDefault(); connect(); });
-disconnect.addEventListener('click', () => {
   resetPlayer();
-  status.textContent = 'Disconnected';
-  message.textContent = 'The game keeps running on your rig. Reconnect whenever you are ready.';
+  input.removeAttribute('aria-invalid');
+  try { localStorage.setItem('avs-player-server', input.value.trim()); } catch (_) {}
+  const share = new URL(location.href);
+  share.searchParams.set('server', input.value.trim());
+  try { history.replaceState(null, '', share); } catch (_) {}
+  direct.href = url.href;
+  direct.hidden = false;
+  if (location.protocol === 'https:' && url.protocol === 'http:') {
+    setStatus('Local player ready');
+    setMessage('Local links open in a separate tab. Use “Open in tab” if your browser blocks the new tab.');
+    if (userGesture) window.open(url.href, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  setStatus('Opening player', 'opening');
+  setMessage('Allow playback in the player when prompted. Your rig may still be loading.');
+  frame = document.createElement('iframe');
+  frame.title = 'AMV Explore interactive player';
+  frame.allow = 'autoplay; fullscreen; gamepad; clipboard-write';
+  frame.allowFullscreen = true;
+  frame.referrerPolicy = 'no-referrer';
+  const currentFrame = frame;
+  frame.addEventListener('load', () => {
+    if (frame !== currentFrame) return;
+    clearTimeout(slowTimer);
+    // Loading a cross-origin iframe does not confirm a live game/video stream.
+    setStatus('Player opened', 'opened');
+    setMessage('Tap or click inside the player to begin. For a blank or sign-in screen, use “Open in tab”.');
+  });
+  frame.src = url.href;
+  placeholder.hidden = true;
+  stage.appendChild(frame);
+  disconnect.disabled = false;
+  fullscreen.disabled = false;
+  document.body.classList.add('player-open');
+  if (window.matchMedia('(max-width: 600px)').matches && typeof viewer.scrollIntoView === 'function') {
+    viewer.scrollIntoView({block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+  }
+  slowTimer = setTimeout(() => {
+    setMessage('Still waiting? Check that the rig is running and your link is current, or choose “Open in tab”.');
+  }, 15000);
+}
+form.addEventListener('submit', event => { event.preventDefault(); connect(true); });
+input.addEventListener('input', () => { input.removeAttribute('aria-invalid'); message.dataset.kind = 'info'; });
+disconnect.addEventListener('click', () => {
+  resetPlayer(); setStatus('Disconnected');
+  setMessage('Your game stays running on the rig. Connect again whenever you’re ready.');
 });
 fullscreen.addEventListener('click', async () => {
+  if (document.body.classList.contains('immersive')) { exitImmersive(); return; }
+  if (document.fullscreenElement) { try { await document.exitFullscreen(); } catch (_) { exitImmersive(); } return; }
   try {
-    if (document.fullscreenElement) await document.exitFullscreen();
-    else await document.querySelector('.viewer').requestFullscreen();
-  } catch (_) { message.textContent = 'Fullscreen is unavailable here. Use “Open in tab” and the player’s fullscreen button.'; }
+    if (!viewer.requestFullscreen) throw new Error('Native fullscreen unavailable');
+    await viewer.requestFullscreen();
+  } catch (_) {
+    // Mobile Safari and embedded browsers can use an in-page fullscreen view.
+    immersiveScroll = window.scrollY;
+    document.body.classList.add('immersive');
+  }
+  fullscreen.setAttribute('aria-label', 'Exit fullscreen'); fullscreen.title = 'Exit fullscreen'; fullscreen.dataset.expanded = 'true';
+});
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) exitImmersive(); });
+
+function closeDialog() {
+  if (!activeDialog) return;
+  const dialog = activeDialog; activeDialog = null;
+  if (typeof dialog.close === 'function') dialog.close(); else dialog.removeAttribute('open');
+  dialog.classList.remove('fallback-open');
+  if (dialogFocus && typeof dialogFocus.focus === 'function') dialogFocus.focus();
+}
+function openDialog(id, opener) {
+  closeDialog();
+  activeDialog = document.getElementById(id); dialogFocus = opener;
+  if (typeof activeDialog.showModal === 'function') activeDialog.showModal();
+  else { activeDialog.setAttribute('open', ''); activeDialog.classList.add('fallback-open'); }
+  const first = activeDialog.querySelector('button'); if (first) first.focus();
+}
+for (const name of ['help', 'controls']) {
+  const open = document.getElementById(name + '-open');
+  open.addEventListener('click', () => openDialog(name + '-dialog', open));
+  document.getElementById(name + '-close').addEventListener('click', closeDialog);
+  const dialog = document.getElementById(name + '-dialog');
+  dialog.addEventListener('cancel', event => { event.preventDefault(); closeDialog(); });
+  dialog.addEventListener('click', event => {
+    const r = dialog.getBoundingClientRect();
+    if (event.target === dialog && (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom)) closeDialog();
+  });
+}
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') { if (activeDialog) closeDialog(); else exitImmersive(); }
+  if (event.key === 'Tab' && activeDialog && activeDialog.classList.contains('fallback-open')) {
+    const focusable = [...activeDialog.querySelectorAll('button,a[href],input,summary')].filter(el => !el.disabled && !el.hidden);
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
 });
 let initial = new URLSearchParams(location.search).get('server');
 if (!initial) { try { initial = localStorage.getItem('avs-player-server'); } catch (_) {} }
-if (initial) { input.value = initial; connect(); }
+if (initial) { input.value = initial; connect(false); }

@@ -23,7 +23,7 @@ jobs:
       - name: Prepare website
         run: |
           mkdir -p _site/avs-player
-          cp avs-player/index.html avs-player/app.js avs-player/style.css _site/avs-player/
+          cp -R avs-player/. _site/avs-player/
           printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=avs-player/"><title>AVS Live Studio</title><a href="avs-player/">Open AVS Player</a>\n' > _site/index.html
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
