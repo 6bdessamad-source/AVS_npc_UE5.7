@@ -33,10 +33,12 @@ Anyone with an unrestricted temporary tunnel link can access your running game. 
 
 Source: `https://github.com/6bdessamad-source/AVS_npc_UE5.7/tree/main/avs-player`
 
-Intended player URL after Pages is enabled and deployed:
+Live player website (deployment verified):
 `https://6bdessamad-source.github.io/AVS_npc_UE5.7/avs-player/`
 
-One-time activation: repository **Settings → Pages → Source → GitHub Actions**. Then open **Actions → Publish AVS Player → Run workflow** if the initial upload's run already failed before Pages was enabled. The connected file-editing tools cannot change this repository administration setting. After activation the included workflow publishes website changes automatically. Wait for a successful deployment before using the intended URL.
+GitHub Pages was already enabled in this repository. The **Publish AVS Player** workflow deployed successfully, and the website returned HTTP 200. Website changes trigger this workflow automatically. If you move the site to a different repository, first set **Settings → Pages → Source → GitHub Actions**, then run **Actions → Publish AVS Player → Run workflow**. The connected file-editing tools cannot change that administration setting.
+
+To run the source downloaded from GitHub, copy `AVS_BuildManager.config.example.json` to `AVS_BuildManager.config.json` and obtain/extract the matching UE5.7 infrastructure; the complete downloadable kit already includes both.
 
 The player page and build manager source are stored in isolated folders. The existing NPC plugin ZIP is preserved. GitHub hosts the webpage; your rig hosts the game and player/signalling runtime. This website cannot power on the rig, remotely launch arbitrary commands, or run the Unreal executable on GitHub.
 
