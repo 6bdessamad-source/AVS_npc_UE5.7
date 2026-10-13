@@ -23,7 +23,7 @@ function playerUrl(value) {
   if (!value.trim()) throw new Error('Paste the streaming link from your launcher first.');
   let url;
   try { url = new URL(value.trim()); } catch (_) { throw new Error('Use the complete link beginning with https:// or http://.'); }
-  // Accept the launcher’s complete laptop link as well as its raw rig address.
+  // Accept the launcher’s complete laptop link as well as its raw main-computer address.
   if ((url.origin === location.origin || url.hostname.endsWith('.github.io')) && url.searchParams.has('server')) {
     try { url = new URL(url.searchParams.get('server')); } catch (_) { throw new Error('This shared link contains an invalid player address.'); }
   }
@@ -82,7 +82,7 @@ function connect(userGesture = false) {
     return;
   }
   setStatus('Opening player', 'opening');
-  setMessage('Allow playback in the player when prompted. Your rig may still be loading.');
+  setMessage('Autorisez la lecture dans le lecteur. Votre Ordinateur principal peut encore charger le projet.');
   frame = document.createElement('iframe');
   frame.title = 'AMV Explore interactive player';
   frame.allow = 'autoplay; fullscreen; gamepad; clipboard-write';
@@ -106,14 +106,14 @@ function connect(userGesture = false) {
     viewer.scrollIntoView({block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
   }
   slowTimer = setTimeout(() => {
-    setMessage('Still waiting? Check that the rig is running and your link is current, or choose “Open in tab”.');
+    setMessage('Vérifiez que votre Ordinateur principal fonctionne et que le lien est actuel, ou choisissez « Open in tab ».');
   }, 15000);
 }
 form.addEventListener('submit', event => { event.preventDefault(); connect(true); });
 input.addEventListener('input', () => { input.removeAttribute('aria-invalid'); message.dataset.kind = 'info'; });
 disconnect.addEventListener('click', () => {
   resetPlayer(); setStatus('Disconnected');
-  setMessage('Your game stays running on the rig. Connect again whenever you’re ready.');
+  setMessage('Le projet reste ouvert sur votre Ordinateur principal. Reconnectez-vous quand vous le souhaitez.');
 });
 fullscreen.addEventListener('click', async () => {
   if (document.body.classList.contains('immersive')) { exitImmersive(); return; }
